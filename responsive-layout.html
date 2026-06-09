@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevPulse — Frontend Insights</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────────── */
+    :root {
+      --ink:        #0d0f14;
+      --ink-muted:  #5a5f6e;
+      --surface:    #f7f8fb;
+      --card:       #ffffff;
+      --accent:     #4f46e5;        /* electric indigo */
+      --accent-2:   #06b6d4;        /* cyan pop */
+      --accent-warm:#f59e0b;        /* amber tag */
+      --border:     #e4e7ef;
+
+      --fs-xs:   clamp(0.72rem, 1.5vw, 0.8rem);
+      --fs-sm:   clamp(0.85rem, 1.8vw, 0.95rem);
+      --fs-body: clamp(0.95rem, 2vw, 1.05rem);
+      --fs-md:   clamp(1.1rem, 2.5vw, 1.3rem);
+      --fs-lg:   clamp(1.4rem, 3.5vw, 1.85rem);
+      --fs-xl:   clamp(2rem, 5vw, 3.2rem);
+      --fs-hero: clamp(2.4rem, 7vw, 4.5rem);
+
+      --radius: 12px;
+      --gap: clamp(1rem, 3vw, 2rem);
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: var(--fs-body);
+      color: var(--ink);
+      background: var(--surface);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── UTILITIES ──────────────────────────────────────────────── */
+    .container {
+      width: min(100%, 1140px);
+      margin-inline: auto;
+      padding-inline: clamp(1rem, 5vw, 2.5rem);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3em;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: var(--fs-xs);
+      font-weight: 500;
+      padding: 0.25em 0.75em;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    .tag.cyan  { background: color-mix(in srgb, var(--accent-2) 12%, transparent); color: #0891b2; }
+    .tag.amber { background: color-mix(in srgb, var(--accent-warm) 15%, transparent); color: #b45309; }
+
+    /* ─── NAV ────────────────────────────────────────────────────── */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247, 248, 251, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: var(--fs-md);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+    }
+    .nav-logo span {
+      color: var(--accent);
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(1rem, 3vw, 2rem);
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: var(--fs-sm);
+      font-weight: 500;
+      color: var(--ink-muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 0.45em 1.1em;
+      border-radius: 999px;
+      font-size: var(--fs-sm) !important;
+      font-weight: 600 !important;
+      transition: background 0.2s, transform 0.15s !important;
+    }
+    .nav-cta:hover { background: #4338ca !important; transform: translateY(-1px); }
+
+    /* Hamburger button — hidden on desktop */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      min-width: 44px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      color: var(--ink);
+      transition: background 0.2s;
+    }
+    .hamburger:hover { background: var(--border); }
+    .hamburger svg { width: 22px; height: 22px; }
+
+    /* Mobile nav popover */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(13,15,20,0.55);
+      backdrop-filter: blur(4px);
+    }
+    .mobile-nav.open { display: flex; align-items: flex-start; justify-content: flex-end; }
+    .mobile-nav-panel {
+      background: var(--card);
+      width: min(300px, 85vw);
+      height: 100%;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .mobile-nav-close {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--ink-muted);
+      min-width: 44px;
+      min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+    }
+    .mobile-nav-close:hover { background: var(--border); }
+    .mobile-nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; }
+    .mobile-nav-links a {
+      display: block;
+      padding: 0.75rem 1rem;
+      font-size: var(--fs-md);
+      font-weight: 500;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .mobile-nav-links a:hover { background: var(--surface); color: var(--accent); }
+
+    /* ─── HERO ───────────────────────────────────────────────────── */
+    .hero {
+      padding-block: clamp(3rem, 8vw, 6rem);
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      align-items: center;
+    }
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: var(--fs-xs);
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .hero-headline {
+      font-family: 'Syne', sans-serif;
+      font-size: var(--fs-hero);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 1.25rem;
+    }
+    .hero-headline em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero-sub {
+      font-size: var(--fs-md);
+      color: var(--ink-muted);
+      max-width: 42ch;
+      margin-bottom: 2rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4em;
+      padding: 0.7em 1.5em;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 44px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+    .btn-primary:hover { background: #4338ca; transform: translateY(-2px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Hero visual — code block aesthetic */
+    .hero-visual {
+      background: #0d0f14;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.7rem, 1.4vw, 0.85rem);
+      line-height: 1.7;
+      color: #c9d1d9;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      overflow: hidden;
+    }
+    .code-bar {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 1.2rem;
+      align-items: center;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #febc2e; }
+    .dot-g { background: #28c840; }
+    .code-bar span {
+      margin-left: auto;
+      font-size: 0.7rem;
+      color: #4a5568;
+    }
+    .ln { color: #3d4451; margin-right: 1em; user-select: none; }
+    .kw  { color: #c678dd; }
+    .fn  { color: #61afef; }
+    .str { color: #98c379; }
+    .val { color: #d19a66; }
+    .cm  { color: #5c6370; font-style: italic; }
+    .hl  { background: rgba(79,70,229,0.15); display: block; margin-inline: -1.5rem; padding-inline: 1.5rem; }
+
+    /* ─── STATS STRIP ────────────────────────────────────────────── */
+    .stats {
+      background: var(--accent);
+      color: #fff;
+      padding-block: clamp(1.5rem, 3vw, 2.5rem);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: var(--fs-xl);
+      font-weight: 800;
+      line-height: 1;
+      display: block;
+    }
+    .stat-label {
+      font-size: var(--fs-xs);
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ─── ARTICLES SECTION ───────────────────────────────────────── */
+    .articles { padding-block: clamp(3rem, 6vw, 5rem); }
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: var(--fs-lg);
+      font-weight: 800;
+      color: var(--ink);
+    }
+    .view-all {
+      font-size: var(--fs-sm);
+      color: var(--accent);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.3em;
+      transition: gap 0.2s;
+    }
+    .view-all:hover { gap: 0.6em; }
+
+    /* Article grid: featured (large) + sidebar cards */
+    .articles-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: var(--gap);
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      transform: translateY(-3px);
+    }
+    .card-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+    .card-img.cyan-bg  { background: linear-gradient(135deg, #cffafe, #a5f3fc); }
+    .card-img.amber-bg { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .card-img.green-bg { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+    .card-body { padding: 1.25rem; }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .card-date {
+      font-size: var(--fs-xs);
+      color: var(--ink-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: var(--fs-md);
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .card:hover .card-title { color: var(--accent); }
+    .card-excerpt {
+      font-size: var(--fs-sm);
+      color: var(--ink-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .featured-card .card-title { font-size: var(--fs-lg); }
+    .featured-card .card-img { aspect-ratio: 16/8; font-size: 4rem; }
+
+    /* Sidebar stack */
+    .sidebar-cards { display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-card {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 0.75rem;
+    }
+    .sidebar-card .card-img {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      font-size: 1.5rem;
+    }
+    .sidebar-card .card-body { padding: 0; }
+    .sidebar-card .card-title { font-size: var(--fs-sm); margin-bottom: 0.2rem; }
+    .sidebar-card .card-excerpt { display: none; }
+
+    /* ─── TOPICS SECTION ─────────────────────────────────────────── */
+    .topics { padding-block: clamp(2rem, 4vw, 3.5rem); }
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .topic-chip {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-height: 44px;
+    }
+    .topic-chip:hover {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 4%, white);
+      transform: translateY(-2px);
+    }
+    .topic-icon { font-size: 1.4rem; }
+    .topic-name {
+      font-weight: 600;
+      font-size: var(--fs-sm);
+      color: var(--ink);
+    }
+    .topic-count {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: var(--fs-xs);
+      color: var(--ink-muted);
+    }
+
+    /* ─── NEWSLETTER ─────────────────────────────────────────────── */
+    .newsletter {
+      padding-block: clamp(3rem, 6vw, 5rem);
+    }
+    .newsletter-box {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #1e40af 100%);
+      border-radius: calc(var(--radius) * 1.5);
+      padding: clamp(2rem, 5vw, 4rem);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .newsletter-box::before {
+      content: '';
+      position: absolute;
+      top: -60%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .newsletter-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: var(--fs-xs);
+      color: #a5b4fc;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .newsletter-title {
+      font-family: 'Syne', sans-serif;
+      font-size: var(--fs-lg);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .newsletter-desc {
+      color: #c7d2fe;
+      font-size: var(--fs-sm);
+    }
+    .newsletter-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .newsletter-input {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 0.7em 1.2em;
+      color: #fff;
+      font-size: var(--fs-sm);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      min-height: 44px;
+      transition: border-color 0.2s;
+    }
+    .newsletter-input::placeholder { color: rgba(255,255,255,0.45); }
+    .newsletter-input:focus { border-color: rgba(165,180,252,0.8); }
+    .newsletter-fine {
+      font-size: var(--fs-xs);
+      color: rgba(199,210,254,0.7);
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────── */
+    .footer {
+      background: var(--ink);
+      color: rgba(255,255,255,0.7);
+      padding-block: clamp(2.5rem, 5vw, 4rem);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--gap);
+      margin-bottom: 2.5rem;
+    }
+    .footer-brand .nav-logo { color: #fff; margin-bottom: 0.75rem; }
+    .footer-brand p { font-size: var(--fs-sm); max-width: 28ch; }
+    .footer-col-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: #fff;
+      font-size: var(--fs-sm);
+      margin-bottom: 1rem;
+    }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .footer-links a { font-size: var(--fs-sm); transition: color 0.2s; }
+    .footer-links a:hover { color: #fff; }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-size: var(--fs-xs);
+    }
+    .footer-bottom a { transition: color 0.2s; }
+    .footer-bottom a:hover { color: #fff; }
+
+    /* ─── RESPONSIVE: TABLET ─────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+      }
+      .hero-visual { order: -1; }
+      .hero-sub { max-width: 100%; }
+
+      .articles-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .sidebar-card {
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-card .card-img { aspect-ratio: 16/9; border-radius: 8px 8px 0 0; font-size: 2rem; }
+      .sidebar-card .card-body { padding: 0.75rem; }
+      .sidebar-card .card-excerpt { display: -webkit-box; }
+
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .newsletter-box { grid-template-columns: 1fr; }
+    }
+
+    /* ─── RESPONSIVE: MOBILE ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+
+      .hero-inner { gap: 2rem; }
+      .hero-headline { letter-spacing: -0.01em; }
+      .hero-actions { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+
+      .sidebar-cards { grid-template-columns: 1fr; }
+
+      .topics-grid { grid-template-columns: 1fr 1fr; }
+
+      .footer-grid { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+
+      .input-group { flex-direction: column; }
+      .newsletter-input { border-radius: var(--radius); }
+      .btn-primary.newsletter-btn { border-radius: var(--radius); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ───────────────────────────────────────────────────────── -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo">Dev<span>Pulse</span></a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#">Articles</a></li>
+        <li><a href="#">Topics</a></li>
+        <li><a href="#">Resources</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#newsletter" class="nav-cta">Subscribe</a></li>
+      </ul>
+
+      <!-- Hamburger for mobile -->
+      <button class="hamburger" aria-label="Open menu" onclick="document.getElementById('mobileNav').classList.add('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile nav overlay -->
+  <div class="mobile-nav" id="mobileNav" role="dialog" aria-modal="true" aria-label="Mobile menu" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="mobile-nav-panel">
+      <button class="mobile-nav-close" aria-label="Close menu" onclick="document.getElementById('mobileNav').classList.remove('open')">✕</button>
+      <ul class="mobile-nav-links" role="list">
+        <li><a href="#" onclick="document.getElementById('mobileNav').classList.remove('open')">Articles</a></li>
+        <li><a href="#" onclick="document.getElementById('mobileNav').classList.remove('open')">Topics</a></li>
+        <li><a href="#" onclick="document.getElementById('mobileNav').classList.remove('open')">Resources</a></li>
+        <li><a href="#" onclick="document.getElementById('mobileNav').classList.remove('open')">About</a></li>
+        <li><a href="#newsletter" onclick="document.getElementById('mobileNav').classList.remove('open')" style="color:var(--accent);font-weight:700;">Subscribe →</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── HERO ──────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <p class="hero-eyebrow">// for frontend developers</p>
+          <h1 class="hero-headline">Build the web that <em>moves</em> with the user.</h1>
+          <p class="hero-sub">Deep dives into CSS, layout systems, and the craft of building interfaces that feel right on every screen.</p>
+          <div class="hero-actions">
+            <a href="#articles" class="btn btn-primary">Browse articles ↓</a>
+            <a href="#topics" class="btn btn-ghost">Explore topics</a>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="code-bar">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+            <span>responsive.css</span>
+          </div>
+          <pre><code><span class="ln">1</span><span class="cm">/* Mobile-first base */</span>
+<span class="ln">2</span><span class="kw">:root</span> {
+<span class="ln">3</span>  <span class="fn">--fs-hero</span>: <span class="fn">clamp</span>(<span class="val">2.4rem</span>, <span class="val">7vw</span>, <span class="val">4.5rem</span>);
+<span class="ln">4</span>  <span class="fn">--gap</span>:     <span class="fn">clamp</span>(<span class="val">1rem</span>, <span class="val">3vw</span>, <span class="val">2rem</span>);
+<span class="ln">5</span>}
+<span class="ln">6</span>
+<span class="ln">7</span><span class="kw">.layout</span> {
+<span class="ln">8</span>  <span class="fn">display</span>: <span class="val">grid</span>;
+<span class="ln">9</span><span class="hl">  <span class="fn">grid-template-columns</span>:</span>
+<span class="hl">    <span class="fn">repeat</span>(<span class="val">auto-fit</span>, <span class="fn">minmax</span>(<span class="val">250px</span>, <span class="val">1fr</span>));</span>
+<span class="ln">11</span>  <span class="fn">gap</span>: <span class="val">var(--gap)</span>;
+<span class="ln">12</span>}
+<span class="ln">13</span>
+<span class="ln">14</span><span class="cm">/* Tablet & up */</span>
+<span class="ln">15</span><span class="kw">@media</span> (<span class="fn">min-width</span>: <span class="val">768px</span>) {
+<span class="ln">16</span>  <span class="kw">.nav-links</span> { <span class="fn">display</span>: <span class="val">flex</span>; }
+<span class="ln">17</span>  <span class="kw">.hamburger</span> { <span class="fn">display</span>: <span class="val">none</span>; }
+<span class="ln">18</span>}</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS ─────────────────────────────────────────────────────── -->
+  <div class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div>
+          <span class="stat-num">140+</span>
+          <span class="stat-label">Articles</span>
+        </div>
+        <div>
+          <span class="stat-num">62k</span>
+          <span class="stat-label">Readers/month</span>
+        </div>
+        <div>
+          <span class="stat-num">18</span>
+          <span class="stat-label">Topics covered</span>
+        </div>
+        <div>
+          <span class="stat-num">4.8★</span>
+          <span class="stat-label">Avg. rating</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ARTICLES ───────────────────────────────────────────────────── -->
+  <section class="articles" id="articles">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Latest Articles</h2>
+        <a href="#" class="view-all">View all <span>→</span></a>
+      </div>
+
+      <div class="articles-layout">
+
+        <!-- Featured -->
+        <article class="card featured-card">
+          <div class="card-img">🌊</div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="tag">CSS Grid</span>
+              <span class="card-date">Jun 07, 2026</span>
+            </div>
+            <h3 class="card-title">Why CSS Grid's <code>auto-fit</code> is the only responsive column trick you'll ever need</h3>
+            <p class="card-excerpt">Forget memorising a dozen breakpoints. A single <code>grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))</code> declaration handles virtually every card layout from a 320px phone to a 4K monitor — with zero media queries and zero JavaScript. Here's how it works, when it breaks, and what to reach for when it does.</p>
+          </div>
+        </article>
+
+        <!-- Sidebar stack -->
+        <aside class="sidebar-cards">
+          <article class="card sidebar-card">
+            <div class="card-img cyan-bg">⚡</div>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="tag cyan">Flexbox</span>
+              </div>
+              <h3 class="card-title">Flexbox gap vs. margin: which one to reach for</h3>
+              <p class="card-excerpt">The gap property changed everything. Here's the mental model.</p>
+            </div>
+          </article>
+
+          <article class="card sidebar-card">
+            <div class="card-img amber-bg">🔤</div>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="tag amber">Typography</span>
+              </div>
+              <h3 class="card-title">Fluid type with <code>clamp()</code> — a practical guide</h3>
+              <p class="card-excerpt">Step-jumps are out. Here's how to scale type smoothly.</p>
+            </div>
+          </article>
+
+          <article class="card sidebar-card">
+            <div class="card-img green-bg">📱</div>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="tag">Mobile UX</span>
+              </div>
+              <h3 class="card-title">The 44px rule — designing touch targets properly</h3>
+              <p class="card-excerpt">Why minimum touch target size matters more than you think.</p>
+            </div>
+          </article>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TOPICS ─────────────────────────────────────────────────────── -->
+  <section class="topics" id="topics">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Topic</h2>
+      </div>
+      <div class="topics-grid">
+        <button class="topic-chip"><span class="topic-icon">🎨</span><span class="topic-name">CSS Layouts</span><span class="topic-count">38</span></button>
+        <button class="topic-chip"><span class="topic-icon">📐</span><span class="topic-name">Responsive</span><span class="topic-count">24</span></button>
+        <button class="topic-chip"><span class="topic-icon">⚡</span><span class="topic-name">Performance</span><span class="topic-count">19</span></button>
+        <button class="topic-chip"><span class="topic-icon">♿</span><span class="topic-name">Accessibility</span><span class="topic-count">15</span></button>
+        <button class="topic-chip"><span class="topic-icon">🧩</span><span class="topic-name">Components</span><span class="topic-count">31</span></button>
+        <button class="topic-chip"><span class="topic-icon">✍️</span><span class="topic-name">Typography</span><span class="topic-count">12</span></button>
+        <button class="topic-chip"><span class="topic-icon">🌙</span><span class="topic-name">Dark Mode</span><span class="topic-count">9</span></button>
+        <button class="topic-chip"><span class="topic-icon">🔮</span><span class="topic-name">CSS Future</span><span class="topic-count">7</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NEWSLETTER ──────────────────────────────────────────────────── -->
+  <section class="newsletter" id="newsletter">
+    <div class="container">
+      <div class="newsletter-box">
+        <div>
+          <p class="newsletter-label">// weekly dispatch</p>
+          <h2 class="newsletter-title">One layout tip.<br>Every Tuesday.</h2>
+          <p class="newsletter-desc">No padding — just concise, practical CSS insights you can use immediately. 6,200 developers already subscribed.</p>
+        </div>
+        <div class="newsletter-form">
+          <div class="input-group">
+            <input type="email" class="newsletter-input" placeholder="your@email.com" aria-label="Email address" />
+            <button class="btn btn-primary newsletter-btn" type="button">Subscribe</button>
+          </div>
+          <p class="newsletter-fine">No spam. Unsubscribe any time. Read the <a href="#" style="color:#a5b4fc">privacy policy</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ──────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo">Dev<span style="color:#818cf8">Pulse</span></a>
+          <p>A publication for frontend developers who care about the craft of building the web.</p>
+        </div>
+        <div>
+          <p class="footer-col-title">Content</p>
+          <ul class="footer-links" role="list">
+            <li><a href="#">Articles</a></li>
+            <li><a href="#">Tutorials</a></li>
+            <li><a href="#">Cheatsheets</a></li>
+            <li><a href="#">Newsletter</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-col-title">Topics</p>
+          <ul class="footer-links" role="list">
+            <li><a href="#">CSS Grid</a></li>
+            <li><a href="#">Flexbox</a></li>
+            <li><a href="#">Responsive</a></li>
+            <li><a href="#">Accessibility</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer-col-title">Company</p>
+          <ul class="footer-links" role="list">
+            <li><a href="#">About</a></li>
+            <li><a href="#">Write for us</a></li>
+            <li><a href="#">Advertise</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 DevPulse. Built mobile-first with ♥</span>
+        <span><a href="#">Privacy</a> · <a href="#">Terms</a></span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
